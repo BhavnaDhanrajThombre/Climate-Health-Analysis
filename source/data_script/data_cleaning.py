@@ -10,6 +10,12 @@ df["date"] = pd.to_datetime(df["date"], errors="coerce")
 print("\nUpdated Data Types:")
 print(df.dtypes)
 
+#aqi shoul not be negative sign error conversion
+df["air_quality_index"] = df["air_quality_index"].abs()
+
+# Healthcare Access Index should be between 0 and 100
+df["healthcare_access_index"] = df["healthcare_access_index"].clip(lower=0, upper=100)
+
 # Save cleaned dataset
 df.to_csv("data/processed/climate_health_cleaned.csv", index=False)
 

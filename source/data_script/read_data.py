@@ -10,7 +10,6 @@ print(df.head())
 # Display the shape of the dataset
 print("\nDataset Shape:")
 print(df.shape)
-
 # Display the column names
 print("\nColumn Names:")
 print(df.columns.tolist())
