@@ -18,7 +18,11 @@ TABLE_NAME = "climate_health"
 # -----------------------------
 # Locate CSV File
 # -----------------------------
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )
+)
 
 CSV_FILE = os.path.join(
     BASE_DIR,
@@ -50,6 +54,8 @@ try:
         print("Connected successfully!")
 
     cursor = conn.cursor()
+    
+    
 
     # -----------------------------
     # Step 3: Create Table
@@ -113,6 +119,19 @@ try:
     cursor.execute(create_table_query)
 
     print(f"Table '{TABLE_NAME}' is ready.")
+    
+        # -----------------------------
+    # Step 3.5: Delete Existing Data
+    # -----------------------------
+    print("\nDeleting existing records...")
+
+    cursor.execute(f"DELETE FROM {TABLE_NAME}")
+
+    conn.commit()
+
+    print("Existing records deleted successfully.")
+    
+    
 
     # -----------------------------
     # Step 4: Insert Records

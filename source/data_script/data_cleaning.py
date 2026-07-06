@@ -20,3 +20,4 @@ df["healthcare_access_index"] = df["healthcare_access_index"].clip(lower=0, uppe
 df.to_csv("data/processed/climate_health_cleaned.csv", index=False)
 
 print("\nData type correction completed successfully!")
+
