@@ -1,0 +1,24 @@
+Column,Total Values,Outliers,Outlier %,Lower Bound,Upper Bound,Future Insight
+record_id,14100,0,0.0,-7048.5,21149.5,No significant outliers
+year,14100,0,0.0,2008.0,2032.0,No significant outliers
+month,14100,0,0.0,-6.0,18.0,No significant outliers
+week,14100,0,0.0,-26.0,78.0,No significant outliers
+latitude,14100,0,0.0,-44.21,85.87,No significant outliers
+longitude,14100,0,0.0,-160.83,258.08,No significant outliers
+population_millions,14100,1128,8.0,-159.0,425.0,Potential climate extreme / health hotspot
+temperature_celsius,14100,0,0.0,-24.63,41.74,No significant outliers
+temp_anomaly_celsius,14100,81,0.57,-1.24,1.48,Potential climate extreme / health hotspot
+precipitation_mm,14100,14,0.1,-37.15,199.25,Potential climate extreme / health hotspot
+heat_wave_days,14100,1616,11.46,0.0,0.0,Potential climate extreme / health hotspot
+extreme_weather_events,14100,1829,12.97,0.0,0.0,Potential climate extreme / health hotspot
+pm25_ugm3,14100,11,0.08,-49.95,180.85,Potential climate extreme / health hotspot
+air_quality_index,14100,11,0.08,-78.0,274.0,Potential climate extreme / health hotspot
+respiratory_disease_rate,14100,54,0.38,27.25,112.45,Potential climate extreme / health hotspot
+cardio_mortality_rate,14100,100,0.71,15.75,45.75,Potential climate extreme / health hotspot
+vector_disease_risk_score,14100,2345,16.63,-4.6,17.0,Potential climate extreme / health hotspot
+waterborne_disease_incidents,14100,151,1.07,4.9,39.3,Potential climate extreme / health hotspot
+heat_related_admissions,14100,354,2.51,-18.45,30.75,Potential climate extreme / health hotspot
+healthcare_access_index,14100,0,0.0,-4.5,133.1,No significant outliers
+gdp_per_capita_usd,14100,0,0.0,-66439.75,120194.25,No significant outliers
+mental_health_index,14100,106,0.75,56.3,83.5,Potential climate extreme / health hotspot
+food_security_index,14100,36,0.26,72.45,116.05,Potential climate extreme / health hotspot
