@@ -9,7 +9,7 @@ from mysql.connector import Error
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",
-    "password": "1234",          # Change if required
+    "password": "root",          # Change if required
     "database": "climate_health_analysis"
 }
 

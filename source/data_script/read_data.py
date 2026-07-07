@@ -29,3 +29,4 @@ print(df.duplicated().sum())
 # Display summary statistics
 print("\nSummary Statistics:")
 print(df.describe(include="all"))
+
