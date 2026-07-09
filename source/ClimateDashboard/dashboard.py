@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # =========================================================================
 # PAGE CONFIG
@@ -55,14 +56,28 @@ html, body, [class*="css"] {{
 section[data-testid="stSidebar"] {{
     background-color: #060D16;
     border-right: 1px solid {BORDER};
-    width: 300px !important;
+    width: 240px !important;
+    min-width: 240px !important;
 }}
 section[data-testid="stSidebar"] > div {{
-    padding-top: 10px;
+    padding-top: 6px;
 }}
 section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{
     color: {SUBTEXT} !important;
-    font-size: 13px !important;
+    font-size: 12.5px !important;
+}}
+
+section[data-testid="stSidebar"] div.stButton > button {{
+    width: 100% !important;
+    min-height: 38px !important;
+    background-color: rgba(31, 143, 255, 0.16) !important;
+    color: {BLUE} !important;
+    border: 1px solid rgba(31, 143, 255, 0.35) !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+}}
+section[data-testid="stSidebar"] div.stButton > button:hover {{
+    background-color: rgba(31, 143, 255, 0.24) !important;
 }}
 
 .block-container {{
@@ -98,10 +113,10 @@ section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{
 .panel-title.red {{ color: {RED}; }}
 .panel-title.purple {{ color: {PURPLE}; }}
 .chart-title {{
-    font-size: 12.5px;
-    font-weight: 600;
-    color: {SUBTEXT};
-    margin-bottom: 2px;
+    font-size: 14px;
+    font-weight: 700;
+    color: {TEXT};
+    margin-bottom: 3px;
 }}
 
 /* KPI cards */
@@ -179,8 +194,9 @@ section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{
 /* Tabs */
 button[data-baseweb="tab"] {{
     color: {SUBTEXT} !important;
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    padding: 14px 20px !important;
 }}
 button[data-baseweb="tab"][aria-selected="true"] {{
     color: {BLUE} !important;
@@ -314,11 +330,8 @@ def sync_categorical_filters():
 sync_categorical_filters()
 
 with st.sidebar:
-    top_l, top_r = st.columns([2.4, 1])
-    with top_l:
-        st.markdown("### 🔎 Filters")
-    with top_r:
-        st.button("↺ Reset", on_click=reset_filters, use_container_width=True)
+    st.button("↺ Reset Filters", on_click=reset_filters, use_container_width=True)
+    st.markdown("<hr style='margin: 6px 0px;'/>", unsafe_allow_html=True)
 
     st.selectbox("Country", cascade_options("country_name", "f_country"), key="f_country")
     st.selectbox("Region", cascade_options("region", "f_region"), key="f_region")
@@ -455,6 +468,7 @@ def kpi_row(d):
             </div>
         </div>
         """, unsafe_allow_html=True)
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
 # =========================================================================
 # CHART BUILDERS
@@ -471,8 +485,18 @@ def fig_bar_region(d, y, color, height=150, top_n=None, ascending=False):
     if top_n:
         g = g.head(top_n)
     fig = px.bar(g, x="region", y=y, text=y)
-    fig.update_traces(marker_color=color, texttemplate="%{text:.0f}", textposition="outside",
-                       textfont=dict(size=9, color=SUBTEXT))
+    fig.update_traces(
+        marker_color=color,
+        texttemplate="%{text:.0f}",
+        textposition="outside",
+        textfont=dict(size=11, color=TEXT),
+        cliponaxis=False,
+    )
+    fig.update_layout(
+        margin=dict(l=40, r=20, t=12, b=90),
+        xaxis_tickangle=-20,
+        yaxis=dict(range=[0, max(g[y]) * 1.18]),
+    )
     return style_fig(fig, height=height)
 
 
@@ -496,32 +520,398 @@ def fig_climate_corr_heatmap(d, height=150):
 def fig_top10_bar(d, col, color, height=150, n=10):
     g = d.groupby("country_name", as_index=False)[col].mean().sort_values(col, ascending=False).head(n)
     g = g.sort_values(col)
-    fig = px.bar(g, x=col, y="country_name", orientation="h", text=col)
-    fig.update_traces(marker_color=color, texttemplate="%{text:.0f}", textposition="outside",
-                       textfont=dict(size=8, color=SUBTEXT))
+    fig = px.bar(g, x=col, y="country_name", orientation="h")
+    fig.update_traces(
+        marker_color=color,
+        text=g[col].round(2).astype(str),
+        texttemplate="%{text}",
+        textposition="outside",
+        textfont=dict(size=11, color=SUBTEXT),
+    )
+    fig.update_yaxes(tickfont=dict(size=11, color=SUBTEXT))
+    fig.update_xaxes(tickfont=dict(size=11, color=SUBTEXT))
     return style_fig(fig, height=height, margin=dict(l=80, r=25, t=10, b=24))
 
 
-def fig_box_income(d, col, height=150):
-    order = ["Lower-Middle", "Upper-Middle", "High"]
-    order = [o for o in order if o in d.income_level.unique()]
-    fig = px.box(d, x="income_level", y=col, category_orders={"income_level": order},
-                 color="income_level", color_discrete_sequence=REGION_SEQ)
-    fig.update_traces(marker=dict(size=2))
-    return style_fig(fig, height=height)
+def fig_risk_health_matrix(d, height=250):
+    g = d.groupby("country_name", as_index=False).agg(
+        avg_aqi=("air_quality_index", "mean"),
+        avg_temp_anomaly=("temp_anomaly_celsius", "mean"),
+        respiratory_disease_rate=("respiratory_disease_rate", "mean"),
+        cardio_mortality_rate=("cardio_mortality_rate", "mean"),
+    )
+    def norm(s):
+        rng = s.max() - s.min()
+        return (s - s.min()) / rng if rng > 0 else s * 0
+
+    g["Climate Risk Score"] = norm(g.avg_aqi + g.avg_temp_anomaly)
+    g["Health Burden Score"] = norm((g.respiratory_disease_rate + g.cardio_mortality_rate) / 2)
+
+    fig = go.Figure()
+    fig.add_shape(type="rect", x0=0, x1=0.5, y0=0, y1=0.5, fillcolor="rgba(59,130,246,0.14)", line_width=0)
+    fig.add_shape(type="rect", x0=0.5, x1=1, y0=0, y1=0.5, fillcolor="rgba(249,115,22,0.14)", line_width=0)
+    fig.add_shape(type="rect", x0=0, x1=0.5, y0=0.5, y1=1, fillcolor="rgba(16,185,129,0.14)", line_width=0)
+    fig.add_shape(type="rect", x0=0.5, x1=1, y0=0.5, y1=1, fillcolor="rgba(255,77,87,0.14)", line_width=0)
+
+    fig.add_trace(go.Scatter(
+        x=g["Climate Risk Score"], y=g["Health Burden Score"], mode="markers+text",
+        text=g["country_name"], textposition="top center",
+        marker=dict(size=9, color=RED, opacity=0.8), hovertemplate="%{text}<br>Climate Risk: %{x:.2f}<br>Health Burden: %{y:.2f}<extra></extra>"
+    ))
+
+    fig.update_layout(
+        xaxis=dict(title="Climate Risk Score", range=[0, 1], showgrid=False, zeroline=False, linecolor=BORDER),
+        yaxis=dict(title="Health Burden Score", range=[0, 1], showgrid=True, gridcolor=GRID, zeroline=False, linecolor=BORDER),
+        margin=dict(l=50, r=10, t=20, b=40),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONT_FAMILY, size=11, color=SUBTEXT), showlegend=False,
+    )
+    return fig
 
 
-def fig_hist(d, col, color, height=150):
-    fig = px.histogram(d, x=col, nbins=25)
-    fig.update_traces(marker_color=color, marker_line_color=BORDER, marker_line_width=0.5)
-    return style_fig(fig, height=height)
+def fig_top10_composite_risk(d, height=250, n=10):
+    g = d.groupby("country_name", as_index=False).agg(
+        avg_aqi=("air_quality_index", "mean"),
+        avg_temp_anomaly=("temp_anomaly_celsius", "mean"),
+        respiratory_disease_rate=("respiratory_disease_rate", "mean"),
+        cardio_mortality_rate=("cardio_mortality_rate", "mean"),
+        heat_related_admissions=("heat_related_admissions", "mean"),
+    )
+    def norm(s):
+        rng = s.max() - s.min()
+        return (s - s.min()) / rng if rng > 0 else s * 0
+
+    g["Climate Risk Score"] = (norm(g.avg_aqi) + norm(g.avg_temp_anomaly) + norm(g.heat_related_admissions)) / 3
+    g["Health Burden Score"] = (norm(g.respiratory_disease_rate) + norm(g.cardio_mortality_rate)) / 2
+    g["Composite Score"] = (g["Climate Risk Score"] + g["Health Burden Score"]) / 2
+    g = g.sort_values("Composite Score", ascending=False).head(n).sort_values("Composite Score")
+
+    fig = px.bar(g, x="Composite Score", y="country_name", orientation="h", text="Composite Score",
+                 color="Climate Risk Score", color_continuous_scale=[[0, GREEN], [0.5, ORANGE], [1, RED]])
+    fig.update_traces(texttemplate="%{text:.2f}", textposition="outside", marker_line_color=BG, marker_line_width=1)
+    fig.update_layout(coloraxis_showscale=False)
+    return style_fig(fig, height=height, margin=dict(l=90, r=25, t=10, b=24), show_legend=False)
 
 
-def fig_scatter(d, x, y, color, height=170, title_size=False):
-    dd = d.sample(min(len(d), 1200), random_state=1)
-    fig = px.scatter(dd, x=x, y=y, color="region", size="population_millions",
-                      size_max=16, opacity=0.65, color_discrete_sequence=REGION_SEQ)
+def fig_disease_burden_region(d, height=320):
+    g = d.groupby("region", as_index=False).agg(
+        Respiratory_Diseases=("respiratory_disease_rate", "mean"),
+        Cardiovascular_Mortality=("cardio_mortality_rate", "mean"),
+        Heat_related_Illness=("heat_related_admissions", "mean"),
+        Waterborne_Diseases=("waterborne_disease_incidents", "mean"),
+        Vector_Disease_Risk=("vector_disease_risk_score", "mean"),
+    )
+    
+    # Calculate percentages
+    disease_cols = ["Respiratory_Diseases", "Cardiovascular_Mortality", "Heat_related_Illness", "Waterborne_Diseases", "Vector_Disease_Risk"]
+    g["Total"] = g[disease_cols].sum(axis=1)
+    for col in disease_cols:
+        g[col] = (g[col] / g["Total"] * 100).round(1)
+    g = g.drop("Total", axis=1)
+    
+    # Rename for display
+    g = g.rename(columns={
+        "Respiratory_Diseases": "Respiratory Diseases",
+        "Cardiovascular_Mortality": "Cardiovascular Mortality",
+        "Heat_related_Illness": "Heat-related Illness",
+        "Waterborne_Diseases": "Waterborne Diseases",
+        "Vector_Disease_Risk": "Vector Diseases",
+    })
+    
+    fig = px.bar(
+        g,
+        x=["Respiratory Diseases", "Cardiovascular Mortality", "Heat-related Illness", "Waterborne Diseases", "Vector Diseases"],
+        y="region",
+        orientation="h",
+        color_discrete_sequence=[PURPLE, RED, ORANGE, BLUE, GREEN],
+        labels={"value": "% Contribution", "region": "Region", "variable": "Disease Category"},
+    )
+    
+    fig.update_layout(
+        barmode="stack",
+        legend_title_text="Disease Categories",
+        xaxis_title="% Contribution of Total Disease Burden",
+        yaxis_title="Region",
+        margin=dict(l=150, r=10, t=25, b=40),
+        height=height,
+    )
+    fig.update_traces(
+        texttemplate="%{x:.1f}%",
+        textposition="inside",
+        textfont=dict(size=10, color=TEXT),
+    )
+    fig.update_xaxes(range=[0, 100])
+    
+    return style_fig(fig, height=height, show_legend=True, margin=dict(l=150, r=10, t=25, b=40))
+
+
+def fig_public_health_trend(d, height=250):
+    grouped = d.groupby("year", as_index=False).agg(
+        Respiratory_Rate=("respiratory_disease_rate", "mean"),
+        Cardio_Mortality=("cardio_mortality_rate", "mean"),
+        Heat_Admissions=("heat_related_admissions", "mean"),
+        Waterborne_Incidents=("waterborne_disease_incidents", "mean"),
+    )
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=grouped["year"], y=grouped["Respiratory_Rate"], mode="lines+markers", name="Respiratory Rate", line=dict(color=PURPLE, width=2.5), marker=dict(size=6)))
+    fig.add_trace(go.Scatter(x=grouped["year"], y=grouped["Cardio_Mortality"], mode="lines+markers", name="Cardio Mortality", line=dict(color=RED, width=2.5), marker=dict(size=6)))
+    fig.add_trace(go.Scatter(x=grouped["year"], y=grouped["Heat_Admissions"], mode="lines+markers", name="Heat Admissions", line=dict(color=ORANGE, width=2.5), marker=dict(size=6)))
+    fig.add_trace(go.Scatter(x=grouped["year"], y=grouped["Waterborne_Incidents"], mode="lines+markers", name="Waterborne Incidents", line=dict(color=GREEN, width=2.5), marker=dict(size=6)))
+    fig.update_layout(xaxis_title="Year", yaxis_title="Average Rate / Admissions",
+                      legend=dict(font=dict(size=9, color=SUBTEXT), orientation="h", y=1.12, x=0),
+                      margin=dict(l=40, r=10, t=20, b=40))
     return style_fig(fig, height=height, show_legend=True)
+
+
+def fig_resp_rate_vs_aqi(d, height=280):
+    g = d.groupby("year", as_index=False).agg(
+        avg_aqi=("air_quality_index", "mean"),
+        avg_resp=("respiratory_disease_rate", "mean"),
+    ).sort_values("year")
+    corr = d["air_quality_index"].corr(d["respiratory_disease_rate"])
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Bar(
+        x=g["year"], y=g["avg_aqi"], name="Average AQI",
+        marker_color=ORANGE, text=g["avg_aqi"].round(0), textposition="outside",
+        hovertemplate="Year %{x}<br>AQI %{y:.1f}<extra></extra>"
+    ), secondary_y=False)
+    fig.add_trace(go.Scatter(
+        x=g["year"], y=g["avg_resp"], name="Respiratory Disease Rate",
+        mode="lines+markers", line=dict(color=PURPLE, width=2.5), marker=dict(size=7, color=PURPLE),
+        hovertemplate="Year %{x}<br>Respiratory Rate %{y:.1f}<extra></extra>"
+    ), secondary_y=True)
+    fig.update_layout(
+        xaxis_title="Year",
+        yaxis_title="Average AQI",
+        yaxis2_title="Respiratory Disease Rate",
+        legend=dict(orientation="h", y=1.12, x=0.02, font=dict(size=10, color=SUBTEXT)),
+        margin=dict(l=50, r=50, t=30, b=40),
+        bargap=0.25,
+    )
+    fig.update_xaxes(showgrid=False, tickmode="linear")
+    fig.update_yaxes(showgrid=True, gridcolor=GRID, zeroline=False, secondary_y=False)
+    fig.update_yaxes(showgrid=False, zeroline=False, secondary_y=True)
+    return style_fig(fig, height=height, show_legend=True)
+
+
+def fig_heatwave_admissions_combo(d, height=320):
+    g = d.groupby("region", as_index=False).agg(
+        heatwave_days=("heat_wave_days", "mean"),
+        heat_admissions=("heat_related_admissions", "mean"),
+    ).sort_values("heatwave_days", ascending=False)
+    colors = [RED if v >= g.heatwave_days.mean() else ORANGE for v in g.heatwave_days]
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Bar(
+        x=g["region"], y=g["heatwave_days"], name="Heatwave Days",
+        marker_color=colors, text=g["heatwave_days"].round(1), textposition="outside",
+        hovertemplate="%{x}<br>Heatwave Days %{y:.1f}<extra></extra>"
+    ), secondary_y=False)
+    fig.add_trace(go.Scatter(
+        x=g["region"], y=g["heat_admissions"], name="Heat-related Admissions",
+        mode="lines+markers", line=dict(color=RED, width=2.5), marker=dict(size=7, color=RED),
+        hovertemplate="%{x}<br>Admissions %{y:.1f}<extra></extra>"
+    ), secondary_y=True)
+    fig.update_layout(
+        xaxis_title="Region",
+        yaxis_title="Heatwave Days",
+        yaxis2_title="Heat-related Admissions",
+        legend=dict(orientation="h", y=1.12, x=0.02, font=dict(size=10, color=SUBTEXT)),
+        margin=dict(l=50, r=50, t=30, b=50),
+        bargap=0.2,
+    )
+    fig.update_xaxes(tickangle=-15)
+    fig.update_yaxes(showgrid=True, gridcolor=GRID, zeroline=False, secondary_y=False)
+    fig.update_yaxes(showgrid=False, zeroline=False, secondary_y=True)
+    return style_fig(fig, height=height, show_legend=True)
+
+
+def fig_precipitation_waterborne(d, height=320):
+    g = d.groupby("year", as_index=False).agg(
+        avg_precipitation=("precipitation_mm", "mean"),
+        avg_waterborne=("waterborne_disease_incidents", "mean"),
+    ).sort_values("year")
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=g["avg_precipitation"], y=g["avg_waterborne"],
+        mode="markers+text",
+        text=g["year"].astype(str),
+        textposition="top center",
+        name="Years",
+        marker=dict(size=10, color=ORANGE, line=dict(color=TEXT, width=1)),
+        hovertemplate="Year %{text}<br>Precipitation %{x:.1f} mm<br>Waterborne Incidents %{y:.1f}<extra></extra>"
+    ))
+
+    trend = np.poly1d(np.polyfit(g["avg_precipitation"], g["avg_waterborne"], 1))
+    x_range = np.linspace(g["avg_precipitation"].min(), g["avg_precipitation"].max(), 50)
+    fig.add_trace(go.Scatter(
+        x=x_range, y=trend(x_range),
+        mode="lines",
+        name="Trend Line",
+        line=dict(color=RED, width=2, dash="dash"),
+        hoverinfo="skip"
+    ))
+
+    fig.update_layout(
+        xaxis_title="Average Precipitation (mm)",
+        yaxis_title="Waterborne Disease Incidents",
+        legend=dict(orientation="h", y=1.12, x=0.02, font=dict(size=10, color=SUBTEXT)),
+        margin=dict(l=50, r=50, t=30, b=40),
+    )
+    fig.update_xaxes(showgrid=False)
+    fig.update_yaxes(showgrid=True, gridcolor=GRID, zeroline=False)
+    return style_fig(fig, height=height, show_legend=True)
+
+
+def fig_temperature_resp_trend(d, height=320):
+    g = d.groupby("year", as_index=False).agg(
+        avg_temp=("temperature_celsius", "mean"),
+        avg_resp=("respiratory_disease_rate", "mean"),
+    ).sort_values("year")
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Scatter(
+        x=g["year"], y=g["avg_temp"], name="Average Temperature",
+        mode="lines+markers", line=dict(color=ORANGE, width=2.5), marker=dict(size=7, color=ORANGE),
+        hovertemplate="Year %{x}<br>Temperature %{y:.1f}°C<extra></extra>"
+    ), secondary_y=False)
+    fig.add_trace(go.Scatter(
+        x=g["year"], y=g["avg_resp"], name="Respiratory Disease Rate",
+        mode="lines+markers", line=dict(color=PURPLE, width=2.5), marker=dict(size=7, color=PURPLE),
+        hovertemplate="Year %{x}<br>Respiratory Rate %{y:.1f}<extra></extra>"
+    ), secondary_y=True)
+    fig.update_layout(
+        xaxis_title="Year",
+        yaxis_title="Average Temperature (°C)",
+        yaxis2_title="Respiratory Disease Rate",
+        legend=dict(orientation="h", y=1.12, x=0.02, font=dict(size=10, color=SUBTEXT)),
+        margin=dict(l=50, r=50, t=30, b=40),
+    )
+    fig.update_xaxes(showgrid=False, tickmode="linear")
+    fig.update_yaxes(showgrid=True, gridcolor=GRID, zeroline=False, secondary_y=False)
+    fig.update_yaxes(showgrid=False, zeroline=False, secondary_y=True)
+    return style_fig(fig, height=height, show_legend=True)
+
+
+def fig_climate_indicator_heatmap(d, height=260):
+    g = d.groupby("region", as_index=False)[["temperature_celsius", "temp_anomaly_celsius", "heat_wave_days", "precipitation_mm", "air_quality_index"]].mean()
+    labels = {
+        "temperature_celsius": "Temperature",
+        "temp_anomaly_celsius": "Temp Anomaly",
+        "heat_wave_days": "Heatwave Days",
+        "precipitation_mm": "Precipitation",
+        "air_quality_index": "AQI",
+    }
+    data = g.rename(columns=labels).set_index("region")
+    fig = go.Figure(go.Heatmap(
+        z=data.values,
+        x=data.columns,
+        y=data.index,
+        colorscale=[[0, BLUE], [0.5, PANEL], [1, RED]],
+        text=np.round(data.values, 2),
+        texttemplate="%{text:.2f}",
+        textfont=dict(size=9, color=TEXT),
+        colorbar=dict(thickness=8, tickfont=dict(size=8, color=SUBTEXT)),
+    ))
+    fig.update_layout(xaxis_title="Indicator", yaxis_title="Region", margin=dict(l=90, r=10, t=20, b=50))
+    return style_fig(fig, height=height, show_legend=False)
+
+
+def fig_feature_importance_chart(d, height=250):
+    climate_vars = ["temperature_celsius", "temp_anomaly_celsius", "heat_wave_days", "precipitation_mm", "air_quality_index"]
+    health_outcomes = ["respiratory_disease_rate", "cardio_mortality_rate", "waterborne_disease_incidents", "heat_related_admissions"]
+    corr = d[climate_vars + health_outcomes].corr()
+    scores = []
+    for var in climate_vars:
+        abs_corr = corr.loc[var, health_outcomes].abs().mean()
+        scores.append((var, abs_corr))
+    score_df = pd.DataFrame(scores, columns=["variable", "importance"]).sort_values("importance", ascending=True)
+    score_df["label"] = score_df.variable.map({
+        "temperature_celsius": "Temperature",
+        "temp_anomaly_celsius": "Temp Anomaly",
+        "heat_wave_days": "Heatwave Days",
+        "precipitation_mm": "Precipitation",
+        "air_quality_index": "AQI",
+    })
+    fig = px.bar(score_df, x="importance", y="label", orientation="h", color="importance",
+                 color_continuous_scale=[[0, BLUE], [0.5, ORANGE], [1, RED]])
+    fig.update_layout(showlegend=False, margin=dict(l=90, r=10, t=20, b=40))
+    fig.update_traces(texttemplate="%{x:.2f}", textposition="outside", textfont=dict(color=SUBTEXT, size=9))
+    return style_fig(fig, height=height, show_legend=False)
+
+
+def fig_risk_factor_ranking(d, height=250):
+    risk_df = compute_risk(d)
+    enriched = d.groupby("country_name", as_index=False).agg(
+        temperature_celsius=("temperature_celsius", "mean"),
+        temp_anomaly_celsius=("temp_anomaly_celsius", "mean"),
+        heat_wave_days=("heat_wave_days", "mean"),
+        air_quality_index=("air_quality_index", "mean"),
+        gdp_per_capita_usd=("gdp_per_capita_usd", "mean"),
+        food_security_index=("food_security_index", "mean"),
+    )
+    merged = enriched.merge(risk_df[["country_name", "risk_score"]], on="country_name")
+    corr_values = merged.corr(numeric_only=True)["risk_score"].drop("risk_score").abs().sort_values(ascending=True)
+    score_df = corr_values.reset_index().rename(columns={"index": "variable", "risk_score": "importance"})
+    labels = {
+        "temperature_celsius": "Temperature",
+        "temp_anomaly_celsius": "Temp Anomaly",
+        "heat_wave_days": "Heatwave Days",
+        "air_quality_index": "AQI",
+        "gdp_per_capita_usd": "GDP per Capita",
+        "food_security_index": "Food Security",
+    }
+    score_df["label"] = score_df.variable.map(labels)
+    fig = px.bar(score_df, x="importance", y="label", orientation="h", color="importance",
+                 color_continuous_scale=[[0, BLUE], [0.5, ORANGE], [1, RED]])
+    fig.update_layout(showlegend=False, margin=dict(l=90, r=10, t=20, b=40))
+    fig.update_traces(texttemplate="%{x:.2f}", textposition="outside", textfont=dict(color=SUBTEXT, size=9))
+    return style_fig(fig, height=height, show_legend=False)
+
+
+def fig_country_risk_map(d, height=320):
+    risk_df = compute_risk(d)
+    g = d.groupby("country_name", as_index=False).agg(
+        latitude=("latitude", "mean"), longitude=("longitude", "mean"),
+        population_millions=("population_millions", "first"),
+    ).merge(risk_df[["country_name", "risk_score"]], on="country_name")
+    fig = px.scatter_geo(g, lat="latitude", lon="longitude", size="population_millions",
+                         color="risk_score", hover_name="country_name",
+                         color_continuous_scale=[[0, GREEN], [0.5, ORANGE], [1, RED]], size_max=30,
+                         projection="natural earth")
+    fig.update_geos(bgcolor="rgba(0,0,0,0)", showland=True, landcolor="#13253A",
+                    showocean=True, oceancolor=BG, showcountries=True, countrycolor=BORDER,
+                    showcoastlines=False, showframe=False)
+    fig.update_layout(coloraxis_colorbar=dict(title="Risk", thickness=8, tickfont=dict(size=8, color=SUBTEXT)))
+    return style_fig(fig, height=height, margin=dict(l=0, r=0, t=0, b=0))
+
+
+def fig_region_risk_ranking(d, height=250):
+    risk_df = compute_risk(d)
+    g = risk_df.groupby("region", as_index=False).risk_score.mean().sort_values("risk_score", ascending=True)
+    fig = px.bar(g, x="risk_score", y="region", orientation="h", text="risk_score",
+                 color="risk_score", color_continuous_scale=[[0, GREEN], [0.5, ORANGE], [1, RED]])
+    fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    return style_fig(fig, height=height, margin=dict(l=90, r=10, t=20, b=40), show_legend=False)
+
+
+def fig_population_at_risk_by_region(d, height=250):
+    risk_df = compute_risk(d)
+    g = d.merge(risk_df[["country_name", "risk_category"]], on="country_name")
+    g = g[g.risk_category == "High Risk"].groupby("region", as_index=False).population_millions.sum().sort_values("population_millions", ascending=True)
+    fig = px.bar(g, x="population_millions", y="region", orientation="h", text="population_millions",
+                 color_discrete_sequence=[ORANGE])
+    fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    fig.update_layout(xaxis_title="Population (Millions)")
+    return style_fig(fig, height=height, margin=dict(l=90, r=10, t=20, b=40), show_legend=False)
+
+
+def fig_healthcare_access_by_income(d, height=250):
+    g = d.groupby("income_level", as_index=False).healthcare_access_index.mean().sort_values("healthcare_access_index", ascending=True)
+    fig = px.bar(g, x="healthcare_access_index", y="income_level", orientation="h", text="healthcare_access_index",
+                 color_discrete_sequence=[GREEN])
+    fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    fig.update_layout(xaxis_title="Healthcare Access Index")
+    return style_fig(fig, height=height, margin=dict(l=90, r=10, t=20, b=40), show_legend=False)
 
 
 def fig_geo_map(d, height=280):
@@ -589,7 +979,7 @@ def fig_correlation_matrix(d, height=300):
         z=corr.values, x=corr.columns, y=corr.index,
         colorscale=[[0, BLUE], [0.5, PANEL], [1, RED]], zmin=-1, zmax=1,
         text=np.round(corr.values, 2), texttemplate="%{text}",
-        textfont=dict(size=8.5, color=TEXT),
+        textfont=dict(size=11, color=TEXT),
         colorbar=dict(thickness=8, tickfont=dict(size=8, color=SUBTEXT)),
     ))
     fig.update_xaxes(tickangle=-35)
@@ -649,58 +1039,29 @@ tabs = st.tabs(["📊 Overview", "🌡️ Climate", "🏥 Health", "📈 Climate
 with tabs[0]:
     kpi_row(df)
 
-    r1c1, r1c2 = st.columns(2)
+    r1c1, r1c2, r1c3 = st.columns([1, 1, 1])
     with r1c1:
-        panel_open("Climate Trend Analysis", "blue")
-        a, b = st.columns(2)
-        chart_card("Average Temperature by Year (°C)", fig_line(df, "year", "temperature_celsius", BLUE), a)
-        chart_card("Average Temperature Anomaly by Year (°C)", fig_line(df, "year", "temp_anomaly_celsius", RED), b)
-        a2, b2 = st.columns(2)
-        chart_card("Extreme Weather Events by Region", fig_bar_region(df, "extreme_weather_events", ORANGE), a2)
-        chart_card("Climate Variable Correlation Heatmap", fig_climate_corr_heatmap(df), b2)
+        panel_open("Priority Countries", "orange")
+        chart_card("Top 10 Countries by Composite Risk", fig_top10_composite_risk(df, height=380))
         panel_close()
     with r1c2:
-        panel_open("Public Health Trend Analysis", "green")
-        a, b = st.columns(2)
-        chart_card("Respiratory Disease Rate Over Years", fig_line(df, "year", "respiratory_disease_rate", PURPLE), a)
-        chart_card("Cardio Mortality Rate Over Years", fig_line(df, "year", "cardio_mortality_rate", RED), b)
-        a2, b2, c2 = st.columns(3)
-        chart_card("Top 10 Heat Related Admissions", fig_top10_bar(df, "heat_related_admissions", RED), a2)
-        chart_card("Respiratory Disease by Income", fig_box_income(df, "respiratory_disease_rate"), b2)
-        chart_card("Mental Health Index Distribution", fig_hist(df, "mental_health_index", GREEN), c2)
+        panel_open("Air Quality & Respiratory Burden", "green")
+        chart_card("Respiratory Disease Rate vs AQI", fig_resp_rate_vs_aqi(df, height=380))
+        panel_close()
+    with r1c3:
+        panel_open("Temperature Trend", "blue")
+        chart_card("Temperature Trend (Yearly)", fig_line(df, "year", "temperature_celsius", ORANGE, height=380))
         panel_close()
 
-    panel_open("Climate vs Health Relationship", "purple")
-    s1, s2, s3, s4 = st.columns(4)
-    chart_card("Temperature vs Respiratory Disease Rate", fig_scatter(df, "temperature_celsius", "respiratory_disease_rate", None), s1)
-    chart_card("AQI vs Cardio Mortality Rate", fig_scatter(df, "air_quality_index", "cardio_mortality_rate", None), s2)
-    chart_card("Heatwave Days vs Heat Admissions", fig_scatter(df, "heat_wave_days", "heat_related_admissions", None), s3)
-    chart_card("Precipitation vs Waterborne Disease", fig_scatter(df, "precipitation_mm", "waterborne_disease_incidents", None), s4)
-    panel_close()
-
-    g1, g2 = st.columns([1.15, 1])
-    with g1:
-        panel_open("Geographic Risk Map", "blue")
-        chart_card("Respiratory Disease Rate & Population by Country", fig_geo_map(df, height=280))
+    r2c1, r2c2 = st.columns([2.2, 0.8])
+    with r2c1:
+        panel_open("Disease Burden by Region", "red")
+        chart_card("Disease Burden Composition by Region", fig_disease_burden_region(df, height=400))
         panel_close()
-    with g2:
-        panel_open("Risk Analysis", "red")
-        risk_df = compute_risk(df)
-        rc1, rc2, rc3 = st.columns([0.9, 1.3, 1])
-        chart_card("Risk Distribution (Global)", fig_risk_donut(risk_df, height=210), rc1)
-        chart_card("Top 15 High Risk Countries", fig_top15_risk(risk_df, height=210), rc2)
-        chart_card("Risk by Region (Treemap)", fig_risk_treemap(risk_df, height=210), rc3)
-        panel_close()
-
-    c1, c2 = st.columns([1.4, 1])
-    with c1:
-        panel_open("Correlation Matrix (Health, Climate & Socioeconomic Factors)", "orange")
-        fig_corr, corr_matrix = fig_correlation_matrix(df, height=300)
-        st.plotly_chart(fig_corr, width="stretch", config={"displayModeBar": False})
-        panel_close()
-    with c2:
-        panel_open("Executive Insights", "green")
-        for icon, text in build_insights(df, corr_matrix):
+    with r2c2:
+        panel_open("Key Insights", "green")
+        corr = df[list(CORR_COLS.keys())].corr().rename(index=CORR_COLS, columns=CORR_COLS)
+        for icon, text in build_insights(df, corr):
             st.markdown(f"<div class='insight-row'><span>{icon}</span><span>{text}</span></div>", unsafe_allow_html=True)
         panel_close()
 
@@ -714,9 +1075,10 @@ with tabs[1]:
     chart_card("Average Temperature by Year (°C)", fig_line(df, "year", "temperature_celsius", BLUE, height=260), a)
     chart_card("Average Temperature Anomaly by Year (°C)", fig_line(df, "year", "temp_anomaly_celsius", RED, height=260), b)
     a2, b2 = st.columns(2)
-    chart_card("Extreme Weather Events by Region", fig_bar_region(df, "extreme_weather_events", ORANGE, height=260), a2)
-    chart_card("Climate Variable Correlation Heatmap", fig_climate_corr_heatmap(df, height=260), b2)
+    chart_card("Extreme Weather Events by Region", fig_bar_region(df, "extreme_weather_events", ORANGE, height=320), a2)
+    chart_card("Climate Variable Correlation Heatmap", fig_climate_corr_heatmap(df, height=340), b2)
     panel_close()
+
     a3, b3, c3 = st.columns(3)
     chart_card("Heatwave Days by Year", fig_line(df, "year", "heat_wave_days", ORANGE, height=220), a3)
     chart_card("Precipitation by Year (mm)", fig_line(df, "year", "precipitation_mm", BLUE, height=220), b3)
@@ -731,10 +1093,11 @@ with tabs[2]:
     a, b = st.columns(2)
     chart_card("Respiratory Disease Rate Over Years", fig_line(df, "year", "respiratory_disease_rate", PURPLE, height=250), a)
     chart_card("Cardio Mortality Rate Over Years", fig_line(df, "year", "cardio_mortality_rate", RED, height=250), b)
-    a2, b2, c2 = st.columns(3)
-    chart_card("Top 10 Heat Related Admission Countries", fig_top10_bar(df, "heat_related_admissions", RED, height=250), a2)
-    chart_card("Respiratory Disease Rate by Income Level", fig_box_income(df, "respiratory_disease_rate", height=250), b2)
-    chart_card("Mental Health Index Distribution", fig_hist(df, "mental_health_index", GREEN, height=250), c2)
+    a2, b2 = st.columns([2.2, 0.8])
+    chart_card("Top 10 Heat Related Admission Countries", fig_top10_bar(df, "heat_related_admissions", RED, height=320), a2)
+    b2.empty()
+    # chart_card("Respiratory Disease Rate by Income Level", fig_box_income(df, "respiratory_disease_rate", height=250), b2)
+    # chart_card("Mental Health Index Distribution", fig_hist(df, "mental_health_index", GREEN, height=250), c2)
     panel_close()
 
 # =========================================================================
@@ -743,12 +1106,12 @@ with tabs[2]:
 with tabs[3]:
     kpi_row(df)
     panel_open("Climate vs Health Relationship — Detailed View", "purple")
-    s1, s2 = st.columns(2)
-    chart_card("Temperature vs Respiratory Disease Rate", fig_scatter(df, "temperature_celsius", "respiratory_disease_rate", None, height=280), s1)
-    chart_card("AQI vs Cardio Mortality Rate", fig_scatter(df, "air_quality_index", "cardio_mortality_rate", None, height=280), s2)
-    s3, s4 = st.columns(2)
-    chart_card("Heatwave Days vs Heat Related Admissions", fig_scatter(df, "heat_wave_days", "heat_related_admissions", None, height=280), s3)
-    chart_card("Precipitation vs Waterborne Disease Incidents", fig_scatter(df, "precipitation_mm", "waterborne_disease_incidents", None, height=280), s4)
+    c1, c2 = st.columns(2)
+    chart_card("Temperature & Respiratory Disease Trend", fig_temperature_resp_trend(df, height=320), c1)
+    chart_card("Heatwave Days vs Heat Admissions", fig_heatwave_admissions_combo(df, height=390), c2)
+    c3, c4 = st.columns(2)
+    chart_card("Precipitation & Waterborne Disease Trend", fig_precipitation_waterborne(df, height=380), c3)
+    chart_card("Climate Indicator Heatmap", fig_climate_indicator_heatmap(df, height=380), c4)
     panel_close()
 
 # =========================================================================
