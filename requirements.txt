@@ -1,1 +1,8 @@
 pandas mysql-connector-python 
+streamlit
+pandas
+plotly
+plotly-express
+matplotlib
+seaborn
+scipy
