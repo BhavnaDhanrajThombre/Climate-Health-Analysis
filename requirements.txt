@@ -1,8 +1,20 @@
 pandas mysql-connector-python 
+seaborn
 streamlit
 pandas
+numpy
 plotly
 plotly-express
 matplotlib
 seaborn
 scipy
+mysql-connector-python
+faiss-cpu
+sentence-transformers
+transformers
+torch
+tqdm
+scikit-learn
+python-dotenv
+google-generativeai
+rapidfuzz
