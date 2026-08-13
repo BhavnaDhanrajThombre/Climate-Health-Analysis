@@ -1,4 +1,3 @@
-seaborn
 streamlit
 pandas
 numpy
@@ -8,12 +7,6 @@ matplotlib
 seaborn
 scipy
 mysql-connector-python
-faiss-cpu
-sentence-transformers
-transformers
-torch
-tqdm
 scikit-learn
 python-dotenv
-google-generativeai
-rapidfuzz
+groq
