@@ -5,6 +5,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from chatbot import render_climate_health_chatbot
+
 # =========================================================================
 # PAGE CONFIG
 # =========================================================================
@@ -64,7 +66,7 @@ section[data-testid="stSidebar"] > div {{
 }}
 section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{
     color: {SUBTEXT} !important;
-    font-size: 12.5px !important;
+    font-size: 13px !important;
 }}
 
 section[data-testid="stSidebar"] div.stButton > button {{
@@ -212,6 +214,99 @@ div[data-testid="stMetric"] {{
     border: 1px solid {BORDER};
     border-radius: 10px;
     padding: 8px;
+}}
+
+/* Main-area buttons (chat suggested questions, clear chat, etc.) */
+main div.stButton > button {{
+    background-color: transparent !important;
+    color: {TEXT} !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: 8px !important;
+    min-height: 36px !important;
+    font-weight: 600 !important;
+}}
+main div.stButton > button:hover {{
+    background-color: rgba(255,255,255,0.03) !important;
+}}
+/* Chat message text and containers */
+main .stChatMessage, main [data-testid="stMessage"] {{
+    background-color: transparent !important;
+    color: {TEXT} !important;
+}}
+main .stChatMessage [data-testid="stMarkdownContainer"],
+main .stChatMessage [data-testid="stMarkdownContainer"] p,
+main .stChatMessage [data-testid="stMarkdownContainer"] li,
+main .stChatMessage .stMarkdown {{
+    color: {TEXT} !important;
+}}
+
+/* Chat input / suggestion area */
+main .stTextInput > div > input,
+main .stTextArea > div > textarea,
+main textarea,
+main input[type="text"] {{
+    background-color: rgba(255,255,255,0.06) !important;
+    color: {TEXT} !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: 24px !important;
+    padding: 10px 16px !important;
+}}
+
+/* Ensure placeholder / muted text in the chat input is lighter but readable */
+main input::placeholder, main textarea::placeholder {{
+    color: {SUBTEXT} !important;
+}}
+/* Additional overrides to ensure main-area buttons and chat bubbles are themed */
+/* Target the block-container (main content) so sidebar buttons remain unchanged */
+.block-container div.stButton > button {{
+    background-color: transparent !important;
+    color: {TEXT} !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: 8px !important;
+    min-height: 36px !important;
+    font-weight: 600 !important;
+}}
+.block-container div.stButton > button:hover {{
+    background-color: rgba(255,255,255,0.03) !important;
+}}
+
+/* Chat bubbles and markdown content (user & assistant messages) */
+div[class*="stChatMessage"], div[data-testid="stMessage"] {{
+    background-color: transparent !important;
+    color: {TEXT} !important;
+}}
+div[data-testid="stMarkdownContainer"],
+div[data-testid="stMarkdownContainer"] p,
+div[data-testid="stMarkdownContainer"] li,
+div[data-testid="stMarkdownContainer"] span {{
+    color: {TEXT} !important;
+    background-color: transparent !important;
+}}
+
+/* Chat input bar (chat_input) */
+.block-container .stChatInput input[type="text"],
+.block-container .stTextInput > div > input,
+.block-container input[type="text"],
+.block-container textarea {{
+    background-color: rgba(255,255,255,0.06) !important;
+    color: {TEXT} !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: 24px !important;
+    padding: 10px 16px !important;
+}}
+
+/* Make list and emphasis text in assistant replies clearly white */
+.block-container div[data-testid="stMarkdownContainer"] ul li,
+.block-container div[data-testid="stMarkdownContainer"] ol li,
+.block-container div[data-testid="stMarkdownContainer"] strong,
+.block-container div[data-testid="stMarkdownContainer"] em {{
+    color: {TEXT} !important;
+}}
+
+/* Make the chat question input text black (only the chat input box) */
+.block-container .stChatInput input[type="text"],
+.block-container .stChatInput textarea {{
+    color: #000000 !important;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -511,8 +606,8 @@ def fig_climate_corr_heatmap(d, height=150):
         z=corr.values, x=corr.columns, y=corr.index,
         colorscale=[[0, BLUE], [0.5, PANEL], [1, RED]], zmin=-1, zmax=1,
         text=np.round(corr.values, 2), texttemplate="%{text}",
-        textfont=dict(size=8, color=TEXT),
-        colorbar=dict(thickness=8, tickfont=dict(size=8, color=SUBTEXT)),
+        textfont=dict(size=11, color=TEXT),
+        colorbar=dict(thickness=8, tickfont=dict(size=11, color=SUBTEXT)),
     ))
     return style_fig(fig, height=height, margin=dict(l=45, r=10, t=10, b=30))
 
@@ -526,11 +621,11 @@ def fig_top10_bar(d, col, color, height=150, n=10):
         text=g[col].round(2).astype(str),
         texttemplate="%{text}",
         textposition="outside",
-        textfont=dict(size=11, color=SUBTEXT),
+        textfont=dict(size=11, color=TEXT),
     )
-    fig.update_yaxes(tickfont=dict(size=11, color=SUBTEXT))
-    fig.update_xaxes(tickfont=dict(size=11, color=SUBTEXT))
-    return style_fig(fig, height=height, margin=dict(l=80, r=25, t=10, b=24))
+    fig.update_yaxes(title="Country", tickfont=dict(size=11, color=SUBTEXT))
+    fig.update_xaxes(title="Heat-Related Admissions", tickfont=dict(size=11, color=SUBTEXT), tickformat=",.0f")
+    return style_fig(fig, height=height, margin=dict(l=90, r=25, t=10, b=24))
 
 
 def fig_risk_health_matrix(d, height=250):
@@ -589,8 +684,10 @@ def fig_top10_composite_risk(d, height=250, n=10):
     fig = px.bar(g, x="Composite Score", y="country_name", orientation="h", text="Composite Score",
                  color="Climate Risk Score", color_continuous_scale=[[0, GREEN], [0.5, ORANGE], [1, RED]])
     fig.update_traces(texttemplate="%{text:.2f}", textposition="outside", marker_line_color=BG, marker_line_width=1)
+    # Ensure axis ticks and outside text are not clipped: give more right margin and allow automargin
+    fig.update_xaxes(range=[0, 1.02], automargin=True)
     fig.update_layout(coloraxis_showscale=False)
-    return style_fig(fig, height=height, margin=dict(l=90, r=25, t=10, b=24), show_legend=False)
+    return style_fig(fig, height=height, margin=dict(l=90, r=80, t=10, b=24), show_legend=False)
 
 
 def fig_disease_burden_region(d, height=320):
@@ -1065,6 +1162,14 @@ with tabs[0]:
             st.markdown(f"<div class='insight-row'><span>{icon}</span><span>{text}</span></div>", unsafe_allow_html=True)
         panel_close()
 
+    # ========================================================
+    # CLIMATE HEALTH AI ASSISTANT (new — bottom of Overview only)
+    # ========================================================
+    st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
+    panel_open("Climate Health AI Assistant", "purple")
+    render_climate_health_chatbot(df)
+    panel_close()
+
 # =========================================================================
 # TAB: CLIMATE (deep dive)
 # =========================================================================
@@ -1094,7 +1199,7 @@ with tabs[2]:
     chart_card("Respiratory Disease Rate Over Years", fig_line(df, "year", "respiratory_disease_rate", PURPLE, height=250), a)
     chart_card("Cardio Mortality Rate Over Years", fig_line(df, "year", "cardio_mortality_rate", RED, height=250), b)
     a2, b2 = st.columns([2.2, 0.8])
-    chart_card("Top 10 Heat Related Admission Countries", fig_top10_bar(df, "heat_related_admissions", RED, height=320), a2)
+    chart_card("Top 10 Heat Related Hospital Admission Countries", fig_top10_bar(df, "heat_related_admissions", RED, height=320), a2)
     b2.empty()
     # chart_card("Respiratory Disease Rate by Income Level", fig_box_income(df, "respiratory_disease_rate", height=250), b2)
     # chart_card("Mental Health Index Distribution", fig_hist(df, "mental_health_index", GREEN, height=250), c2)
