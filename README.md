@@ -190,10 +190,6 @@ A positive correlation indicates that two variables tend to increase together, w
 
 ---
 
-#  Climate Health AI Assistant
-
-The dashboard includes an integrated AI chatbot called:
-
 **Climate Health AI Assistant**
 
 The chatbot is designed specifically to help users understand the analytical information displayed in the dashboard.
@@ -205,9 +201,7 @@ It is powered by:
 * **Streamlit**
 * **Pandas**
 * **Python**
-
-The chatbot is implemented in a separate `chatbot.py` module and integrated into the Overview tab.
-
+  
 ---
 
 ##  Anti-Hallucination Design
@@ -266,25 +260,6 @@ For example:
 
 ---
 
-#  Chatbot Interface
-
-The chatbot interface contains:
-
-* Suggested question buttons
-* Conversation history
-* Chat input field
-* Active filter summary
-* AI-generated responses
-* Clear Chat button
-
-The input prompt is:
-
-**"Ask about climate, health, risk, trends..."**
-
-The chatbot also displays the active dashboard filters so users can understand the context being used for the response.
-
----
-
 #  Environment Configuration
 
 The chatbot requires a Groq API key.
@@ -302,41 +277,7 @@ GROQ_MODEL=openai/gpt-oss-120b
 
 ---
 
-#  Dashboard Application Structure
-
-### `dashboard.py`
-
-Contains:
-
-* Streamlit application
-* Dashboard layout
-* Sidebar filters
-* KPI cards
-* Plotly charts
-* Risk calculations
-* Correlation analysis
-* Dashboard tabs
-* Chatbot integration
-
-### `chatbot.py`
-
-Contains:
-
-* Groq client
-* AI system prompt
-* Active filter context
-* Local analytical calculations
-* Data context generation
-* Risk analysis integration
-* Correlation analysis
-* Chat interface
-* Conversation history management
-
-The chatbot integration was intentionally isolated in `chatbot.py`, while the dashboard only imports and renders the chatbot component.
-
----
-
-# 🔄 Dashboard–Chatbot Integration
+#  Dashboard–Chatbot Integration
 
 The integration follows this flow:
 
