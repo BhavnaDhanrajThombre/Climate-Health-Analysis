@@ -4,8 +4,6 @@ An interactive **Streamlit-based Climate Health Impact Analytics Dashboard** des
 
 The application combines interactive visual analytics with an AI-powered **Climate Health AI Assistant** that allows users to ask questions about the information currently displayed in the dashboard.
 
-> **Note:** This README covers only the **dashboard application and AI chatbot**. Dataset documentation is maintained separately.
-
 ---
 
 ##  Dashboard Overview
@@ -77,9 +75,7 @@ It includes:
 * Disease Burden Composition by Region
 * Key Insights
 * Climate Health AI Assistant
-
-The chatbot is placed at the **bottom of the Overview tab**, after the main dashboard visualizations and Key Insights.
-
+  
 ---
 
 ###  2. Climate
@@ -289,18 +285,6 @@ The chatbot also displays the active dashboard filters so users can understand t
 
 ---
 
-##  Conversation Memory
-
-The chatbot maintains conversation history using Streamlit's:
-
-`st.session_state.chat_messages`
-
-To keep the context compact, the conversation is limited to the most recent **12 messages**.
-
-Users can also clear the conversation using the **Clear chat** button.
-
----
-
 #  Environment Configuration
 
 The chatbot requires a Groq API key.
@@ -315,31 +299,6 @@ GROQ_MODEL=openai/gpt-oss-120b
 `GROQ_MODEL` is optional because the application has a default model configured.
 
 **Do not commit your `.env` file or API key to GitHub.**
-
----
-
-#  Required Dependencies
-
-The chatbot requires the following additional packages:
-
-```text
-groq>=0.11.0
-python-dotenv>=1.0.1
-```
-
-The dashboard itself uses the Python packages required for Streamlit, data processing, and interactive visualization.
-
----
-
-#  Running the Dashboard
-
-From the project directory, run:
-
-```bash
-streamlit run dashboard.py
-```
-
-The Streamlit application will start locally and provide a browser URL where the dashboard can be accessed.
 
 ---
 
@@ -468,7 +427,7 @@ If the Groq API key is missing or an API request fails, the chatbot displays a w
 
 ---
 
-## 📌 Key Design Principle
+##  Key Design Principle
 
 > **The dashboard is the source of analytical truth, while the AI assistant acts as an explanatory interface over the dashboard's computed results.**
 
