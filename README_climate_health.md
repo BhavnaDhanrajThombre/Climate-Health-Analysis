@@ -1,6 +1,6 @@
 # Global Climate-Health Impact Tracker (2015-2025)
 
-## 📊 Dataset Overview
+##  Dataset Overview
 
 This comprehensive dataset tracks the relationship between climate events and health outcomes across 25 countries from 2015 to 2025. It combines climate indicators, air quality measurements, health statistics, and socioeconomic factors to enable research on climate change impacts on public health.
 
@@ -9,7 +9,7 @@ This comprehensive dataset tracks the relationship between climate events and he
 **Geographic Coverage**: 25 countries across 8 regions  
 **Total Features**: 30 columns
 
-## 🎯 Use Cases
+##  Use Cases
 
 - **Climate-Health Research**: Analyze correlations between climate events and health outcomes
 - **Predictive Modeling**: Build models to forecast health impacts from climate patterns
@@ -18,7 +18,7 @@ This comprehensive dataset tracks the relationship between climate events and he
 - **Comparative Studies**: Compare climate-health relationships across income levels and regions
 - **Data Visualization**: Create compelling visualizations of global climate-health patterns
 
-## 📁 Dataset Structure
+##  Dataset Structure
 
 ### Geographic Dimensions
 - `record_id`: Unique identifier for each record
@@ -63,7 +63,7 @@ This comprehensive dataset tracks the relationship between climate events and he
 - `mental_health_index`: Population mental health score (0-100)
 - `food_security_index`: Food security score (0-100)
 
-## 📈 Key Statistics
+##  Key Statistics
 
 - **Temporal Coverage**: 11 years of weekly data
 - **Missing Values**: 0 (100% complete)
@@ -71,7 +71,7 @@ This comprehensive dataset tracks the relationship between climate events and he
 - **Temperature Range**: -20.7°C to 38.3°C
 - **Countries**: USA, India, China, Brazil, Nigeria, Germany, Japan, UK, France, Australia, Kenya, Mexico, Indonesia, Pakistan, Bangladesh, Egypt, South Africa, Canada, Spain, Italy, Thailand, Philippines, Vietnam, Argentina, Colombia
 
-## 🔬 Methodology
+##  Methodology
 
 This dataset synthesizes patterns from multiple authoritative sources including:
 - World Bank Climate Data
@@ -82,7 +82,7 @@ This dataset synthesizes patterns from multiple authoritative sources including:
 
 Data follows realistic statistical distributions and correlations observed in climate-health research literature.
 
-## 💡 Sample Analysis Ideas
+##  Sample Analysis Ideas
 
 1. **Correlation Analysis**: Examine relationships between temperature anomalies and respiratory disease rates
 2. **Regional Comparisons**: Compare climate-health impacts across income levels
@@ -91,7 +91,7 @@ Data follows realistic statistical distributions and correlations observed in cl
 5. **Time Series Forecasting**: Forecast future health risks under different climate scenarios
 6. **Visualization**: Create interactive dashboards showing climate-health relationships
 
-## 📚 Citation
+##  Citation
 
 If you use this dataset in your research or analysis, please cite:
 
@@ -101,15 +101,15 @@ Created: October 2025
 Source: Kaggle Datasets
 ```
 
-## 📄 License
+##  License
 
 This dataset is released under **CC0: Public Domain**. You are free to use, modify, and distribute this data for any purpose.
 
-## 🤝 Acknowledgments
+##  Acknowledgments
 
 This dataset was created to support research on climate change impacts on public health and to facilitate data-driven policy decisions.
 
-## 📧 Contact
+##  Contact
 
 For questions or feedback about this dataset, please use the Kaggle discussion forum.
 
