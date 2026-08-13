@@ -8,7 +8,7 @@ The application combines interactive visual analytics with an AI-powered **Clima
 
 ---
 
-## 📊 Dashboard Overview
+##  Dashboard Overview
 
 The dashboard provides an interactive interface for exploring climate and public-health indicators across countries, regions, and years.
 
@@ -32,7 +32,7 @@ with the subtitle:
 
 ---
 
-## ✨ Dashboard Features
+##  Dashboard Features
 
 ### 1. Interactive Sidebar Filters
 
@@ -55,11 +55,11 @@ The dashboard also displays how many records and countries are currently represe
 
 ---
 
-## 📌 Dashboard Tabs
+##  Dashboard Tabs
 
 The application contains seven analytical tabs.
 
-### 📊 1. Overview
+###  1. Overview
 
 The Overview tab provides a high-level summary of the currently filtered data.
 
@@ -82,7 +82,7 @@ The chatbot is placed at the **bottom of the Overview tab**, after the main dash
 
 ---
 
-### 🌡️ 2. Climate
+###  2. Climate
 
 The Climate tab provides detailed climate-related analysis and visualizations.
 
@@ -100,7 +100,7 @@ The visualizations allow users to explore climate patterns and variations across
 
 ---
 
-### 🏥 3. Health
+###  3. Health
 
 The Health tab focuses on public-health outcomes associated with the climate-health analysis.
 
@@ -116,7 +116,7 @@ The tab also provides trend analysis across years and country-level comparisons.
 
 ---
 
-### 📈 4. Climate vs Health
+###  4. Climate vs Health
 
 This tab provides a deeper analysis of relationships between climate indicators and health outcomes.
 
@@ -133,7 +133,7 @@ These visualizations help users investigate associations between climate conditi
 
 ---
 
-### 🌎 5. Geographic
+###  5. Geographic
 
 The Geographic tab provides country-level geographic analysis.
 
@@ -147,7 +147,7 @@ This allows users to identify geographical patterns and regions with different l
 
 ---
 
-### ⚠️ 6. Risk Analysis
+###  6. Risk Analysis
 
 The Risk Analysis tab provides a dedicated view of climate-health risk.
 
@@ -176,7 +176,7 @@ using the 33rd and 66th percentile thresholds.
 
 ---
 
-### 🔗 7. Correlation
+###  7. Correlation
 
 The Correlation tab provides a detailed correlation analysis between selected climate and health indicators.
 
@@ -194,7 +194,7 @@ A positive correlation indicates that two variables tend to increase together, w
 
 ---
 
-# 🤖 Climate Health AI Assistant
+#  Climate Health AI Assistant
 
 The dashboard includes an integrated AI chatbot called:
 
@@ -214,80 +214,7 @@ The chatbot is implemented in a separate `chatbot.py` module and integrated into
 
 ---
 
-## 🔄 How the Chatbot Works
-
-The chatbot follows a **Python-first analytical architecture**.
-
-### Step 1 — Dashboard Filtering
-
-The chatbot receives the same dataframe that is already filtered by the dashboard.
-
-This means the chatbot automatically understands the currently selected:
-
-* Country
-* Region
-* Income Level
-* Year
-* Month
-* Temperature range
-* AQI range
-
-Therefore, chatbot responses stay synchronized with the dashboard filters.
-
----
-
-### Step 2 — Local Data Analysis
-
-Before asking the AI model for an answer, Python calculates the required analytical information.
-
-The chatbot computes:
-
-* Dataset summary
-* Number of filtered records
-* Countries and regions represented
-* Metric statistics
-* Mean
-* Minimum
-* Maximum
-* Median
-* Standard deviation
-* Top countries by AQI
-* Top countries by respiratory disease rate
-* Top countries by heat-related admissions
-* Regional breakdowns
-* Year-over-year changes
-* Risk analysis
-* Correlation snapshot
-
-This analytical context is generated locally using Pandas.
-
----
-
-### Step 3 — Data Context Sent to the AI
-
-The chatbot does **not simply send the entire raw dataset to the language model**.
-
-Instead, Python creates a compact analytical context containing the relevant calculated results.
-
-This context is then provided to the Groq model together with the user's question and limited conversation history.
-
-This architecture helps the AI explain computed dashboard results rather than independently calculating or guessing values.
-
----
-
-### Step 4 — Groq AI Response
-
-The chatbot sends the analytical context to the Groq Chat Completions API.
-
-The configured model is:
-
-`openai/gpt-oss-120b`
-
-The model configuration can be changed through the environment variables.
-
----
-
-## 🛡️ Anti-Hallucination Design
+##  Anti-Hallucination Design
 
 The chatbot uses a strict system prompt to ensure that responses remain grounded in the dashboard data.
 
@@ -303,11 +230,9 @@ The assistant is instructed to:
 * Mention active filters when they materially affect the answer
 * Redirect questions unrelated to supported dashboard topics
 
-If the requested information cannot be determined from the available dashboard data, the chatbot responds that there is not enough information to answer reliably.
-
 ---
 
-## ⚠️ Risk Analysis Used by the Chatbot
+##  Risk Analysis Used by the Chatbot
 
 The chatbot reuses the dashboard's existing risk methodology instead of creating a separate risk definition.
 
@@ -330,7 +255,7 @@ This ensures that chatbot risk-related answers remain consistent with the Risk A
 
 ---
 
-## 🔗 Correlation Analysis in the Chatbot
+##  Correlation Analysis in the Chatbot
 
 The chatbot can also use correlation information calculated from the currently filtered data.
 
@@ -340,12 +265,12 @@ The chatbot is explicitly instructed not to describe correlation as causation.
 
 For example:
 
-* ✅ "Temperature is positively associated with respiratory disease rate."
-* ❌ "Temperature causes respiratory disease."
+*  "Temperature is positively associated with respiratory disease rate."
+*  "Temperature causes respiratory disease."
 
 ---
 
-# 💻 Chatbot Interface
+#  Chatbot Interface
 
 The chatbot interface contains:
 
@@ -364,7 +289,7 @@ The chatbot also displays the active dashboard filters so users can understand t
 
 ---
 
-## 🧠 Conversation Memory
+##  Conversation Memory
 
 The chatbot maintains conversation history using Streamlit's:
 
@@ -376,7 +301,7 @@ Users can also clear the conversation using the **Clear chat** button.
 
 ---
 
-# 🔐 Environment Configuration
+#  Environment Configuration
 
 The chatbot requires a Groq API key.
 
@@ -393,7 +318,7 @@ GROQ_MODEL=openai/gpt-oss-120b
 
 ---
 
-# 📦 Required Dependencies
+#  Required Dependencies
 
 The chatbot requires the following additional packages:
 
@@ -406,7 +331,7 @@ The dashboard itself uses the Python packages required for Streamlit, data proce
 
 ---
 
-# 🚀 Running the Dashboard
+#  Running the Dashboard
 
 From the project directory, run:
 
@@ -418,19 +343,7 @@ The Streamlit application will start locally and provide a browser URL where the
 
 ---
 
-# 📁 Dashboard Application Structure
-
-The dashboard-related implementation is organized around the following files:
-
-```text
-Climate Health Analysis/
-│
-├── dashboard.py
-├── chatbot.py
-├── requirements.txt
-├── .env
-└── climate_health_cleaned.csv
-```
+#  Dashboard Application Structure
 
 ### `dashboard.py`
 
@@ -492,7 +405,7 @@ This helps maintain consistency between the visual dashboard and chatbot respons
 
 ---
 
-# ⚠️ Chatbot Limitations
+#  Chatbot Limitations
 
 The Climate Health AI Assistant is an **analytical dashboard assistant**, not a medical professional.
 
@@ -506,25 +419,6 @@ It should not be used for:
 The chatbot is limited to the information and analytical results available within the dashboard.
 
 If the Groq API key is missing or an API request fails, the chatbot displays a warning instead of crashing the dashboard. The remaining dashboard functionality continues to work normally.
-
----
-
-# 🎯 Project Objective
-
-The dashboard and AI assistant are designed to make climate-health analytics easier to explore and understand.
-
-The **dashboard** provides interactive visual analysis, while the **AI assistant** provides a natural-language interface for querying the same filtered analytical information.
-
-Together, they allow users to:
-
-* Explore climate and health patterns
-* Compare countries and regions
-* Analyze trends
-* Investigate climate-health associations
-* Identify high-risk countries
-* Understand risk scores
-* Examine correlations
-* Ask questions about the currently filtered dashboard data
 
 ---
 
@@ -543,7 +437,7 @@ Together, they allow users to:
 
 ---
 
-## 👩‍💻 Application Architecture
+##  Application Architecture
 
 ```text
                    Climate Health Dashboard
